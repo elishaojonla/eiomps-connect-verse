@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Eiomps — dark Web3 social design system.
- * All colors in oklch. Purple + electric blue accents over deep space background.
+ * Eiomps — pure black & white editorial theme.
+ * No color, no gradients (other than subtle grey wash for banners/fallbacks).
  */
 
 @theme inline {
@@ -34,67 +34,57 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-purple: var(--purple);
-  --color-blue: var(--blue);
   --color-success: var(--success);
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
 :root {
-  --radius: 0.75rem;
-  /* Deep space dark theme */
-  --background: oklch(0.16 0.025 280);
-  --foreground: oklch(0.97 0.01 280);
-  --card: oklch(0.21 0.03 280);
-  --card-foreground: oklch(0.97 0.01 280);
-  --popover: oklch(0.21 0.03 280);
-  --popover-foreground: oklch(0.97 0.01 280);
-  --primary: oklch(0.68 0.22 295);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.28 0.04 280);
-  --secondary-foreground: oklch(0.97 0.01 280);
-  --muted: oklch(0.25 0.03 280);
-  --muted-foreground: oklch(0.68 0.03 280);
-  --accent: oklch(0.65 0.22 255);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.65 0.24 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.32 0.04 280 / 60%);
-  --input: oklch(0.28 0.04 280);
-  --ring: oklch(0.68 0.22 295);
-  --purple: oklch(0.68 0.22 295);
-  --blue: oklch(0.65 0.22 255);
-  --success: oklch(0.7 0.18 160);
+  --radius: 0.875rem;
+  /* Pure B/W */
+  --background: oklch(0 0 0);             /* pure black */
+  --foreground: oklch(0.985 0 0);         /* near-white */
+  --card: oklch(0.08 0 0);                /* deep charcoal */
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.08 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(1 0 0);                /* white */
+  --primary-foreground: oklch(0 0 0);     /* black */
+  --secondary: oklch(0.14 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.12 0 0);
+  --muted-foreground: oklch(0.62 0 0);    /* warm grey */
+  --accent: oklch(0.18 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.7 0.2 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.22 0 0);
+  --input: oklch(0.10 0 0);
+  --ring: oklch(0.7 0 0);
+  --success: oklch(0.78 0.12 160);
 
-  --gradient-brand: linear-gradient(135deg, oklch(0.68 0.22 295), oklch(0.65 0.22 255));
-  --gradient-soft: linear-gradient(135deg, oklch(0.68 0.22 295 / 18%), oklch(0.65 0.22 255 / 18%));
-  --shadow-glow: 0 10px 40px -10px oklch(0.68 0.22 295 / 50%);
-  --shadow-elegant: 0 8px 30px -12px oklch(0 0 0 / 60%);
+  --gradient-brand: linear-gradient(135deg, oklch(0.22 0 0), oklch(0.06 0 0));
+  --gradient-soft: linear-gradient(135deg, oklch(0.18 0 0), oklch(0.08 0 0));
+  --shadow-glow: 0 6px 28px -10px oklch(1 0 0 / 18%);
+  --shadow-elegant: 0 10px 40px -16px oklch(0 0 0 / 90%);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   html, body { background-color: var(--color-background); color: var(--color-foreground); }
   body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
 }
 
-@utility bg-brand-gradient {
-  background-image: var(--gradient-brand);
+@utility bg-brand-gradient { background-image: var(--gradient-brand); }
+@utility bg-soft-gradient { background-image: var(--gradient-soft); }
+@utility text-brand-gradient { color: var(--color-foreground); }
+@utility shadow-glow { box-shadow: var(--shadow-glow); }
+@utility shadow-elegant { box-shadow: var(--shadow-elegant); }
+
+/* Hide scrollbars on horizontal media rails but keep scroll */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-@utility bg-soft-gradient {
-  background-image: var(--gradient-soft);
-}
-@utility text-brand-gradient {
-  background-image: var(--gradient-brand);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-@utility shadow-glow {
-  box-shadow: var(--shadow-glow);
-}
-@utility shadow-elegant {
-  box-shadow: var(--shadow-elegant);
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
