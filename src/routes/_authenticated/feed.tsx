@@ -217,11 +217,13 @@ function Composer({ onPosted, me }: { onPosted: () => void; me: string | null })
     try {
       let media_url: string | null = null;
       let media_type: "image" | "video" | "audio" | null = null;
+      let audioMime = "";
       if (media) {
         const ext =
           media.type === "image" ? ((media.file as File).name?.split(".").pop() || "jpg") :
           media.type === "video" ? ((media.file as File).name?.split(".").pop() || "mp4") :
           (media.file.type.includes("mp4") ? "mp4" : "webm");
+        audioMime = media.file.type;
         const { path } = await uploadMedia(me, "posts", media.file, ext);
         media_url = path;
         media_type = media.type;
@@ -235,7 +237,7 @@ function Composer({ onPosted, me }: { onPosted: () => void; me: string | null })
 
       // Background transcription for voice posts
       if (media_url && media_type === "audio" && inserted) {
-        transcribe({ data: { path: media_url, mime: media.file.type } })
+        transcribe({ data: { path: media_url, mime: audioMime } })
           .then(async (r) => {
             if (r.text) {
               await supabase.from("posts").update({ transcript: r.text }).eq("id", inserted.id);
@@ -244,6 +246,7 @@ function Composer({ onPosted, me }: { onPosted: () => void; me: string | null })
           })
           .catch((err) => console.warn("transcribe failed", err));
       }
+
 
       setContent("");
       setMedia(null);

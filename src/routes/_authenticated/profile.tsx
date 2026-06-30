@@ -140,10 +140,12 @@ function ProfilePage() {
     try {
       const { path } = await uploadMedia(me, kind === "avatar" ? "avatars" : "banners", file, file.name.split(".").pop() || "jpg");
       const url = await signed(path, 60 * 60 * 24 * 365);
-      await supabase.from("profiles").update({ [kind === "avatar" ? "avatar_url" : "banner_url"]: url }).eq("id", me);
+      const patch = kind === "avatar" ? { avatar_url: url } : { banner_url: url };
+      await supabase.from("profiles").update(patch).eq("id", me);
       queryClient.invalidateQueries({ queryKey: ["profile", me] });
       toast.success(`${kind === "avatar" ? "Photo" : "Banner"} updated`);
     } catch (e: any) { toast.error(e.message ?? "Upload failed"); }
+
   }
 
   if (!profile) {
