@@ -98,9 +98,10 @@ function AuthPage() {
       <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
           <Link to="/" className="inline-flex items-center gap-2">
-            <div className="h-10 w-10 rounded-xl bg-brand-gradient shadow-glow" />
-            <span className="font-display text-3xl font-bold text-brand-gradient">Eiomps</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-foreground font-display text-base font-bold text-background">e</div>
+            <span className="font-display text-3xl font-bold tracking-tighter text-foreground" style={{ letterSpacing: "-0.04em" }}>eiomps<span className="text-muted-foreground">.</span></span>
           </Link>
+
           <p className="mt-3 text-sm text-muted-foreground">
             Web3 social for the on-chain generation
           </p>

@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookmarks: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          author_id: string
+          content: string | null
+          created_at: string
+          id: string
+          media_type: string | null
+          media_url: string | null
+          post_id: string
+          transcript: string | null
+        }
+        Insert: {
+          author_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          post_id: string
+          transcript?: string | null
+        }
+        Update: {
+          author_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string | null
+          media_url?: string | null
+          post_id?: string
+          transcript?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -47,6 +128,39 @@ export type Database = {
           {
             foreignKeyName: "conversations_user_b_fkey"
             columns: ["user_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -180,24 +294,39 @@ export type Database = {
       posts: {
         Row: {
           author_id: string
-          content: string
+          bookmarks_count: number
+          comments_count: number
+          content: string | null
           created_at: string
           id: string
           likes_count: number
+          media_type: string | null
+          media_url: string | null
+          transcript: string | null
         }
         Insert: {
           author_id: string
-          content: string
+          bookmarks_count?: number
+          comments_count?: number
+          content?: string | null
           created_at?: string
           id?: string
           likes_count?: number
+          media_type?: string | null
+          media_url?: string | null
+          transcript?: string | null
         }
         Update: {
           author_id?: string
-          content?: string
+          bookmarks_count?: number
+          comments_count?: number
+          content?: string | null
           created_at?: string
           id?: string
           likes_count?: number
+          media_type?: string | null
+          media_url?: string | null
+          transcript?: string | null
         }
         Relationships: [
           {
@@ -212,6 +341,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          banner_url: string | null
           bio: string | null
           created_at: string
           full_name: string | null
@@ -229,6 +359,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string
           full_name?: string | null
@@ -246,6 +377,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           created_at?: string
           full_name?: string | null

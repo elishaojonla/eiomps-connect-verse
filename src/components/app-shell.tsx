@@ -56,11 +56,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
           <Link to="/feed" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-brand-gradient shadow-glow" />
-            <span className="font-display text-xl font-bold tracking-tight text-brand-gradient">
-              Eiomps
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-foreground font-display text-sm font-bold text-background">e</div>
+            <span className="font-display text-xl font-bold tracking-tighter text-foreground" style={{ letterSpacing: "-0.04em" }}>
+              eiomps<span className="text-muted-foreground">.</span>
             </span>
           </Link>
+
           <button
             onClick={handleSignOut}
             className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-foreground"
