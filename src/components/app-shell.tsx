@@ -1,17 +1,22 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, MessageCircle, Bell, User, LogOut } from "lucide-react";
+import { Home, MessageCircle, Bell, User, LogOut, Search, Flame, Settings } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { ContentPolicy } from "@/components/content-policy";
 
 const navItems = [
   { to: "/feed", label: "Home", icon: Home },
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/trending", label: "Trending", icon: Flame },
   { to: "/messages", label: "Messages", icon: MessageCircle },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/profile", label: "Profile", icon: User },
+  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -106,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-xl md:hidden">
         <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2">
-          {navItems.map((item) => {
+          {navItems.filter(i => ["/feed","/search","/messages","/notifications","/profile"].includes(i.to)).map((item) => {
             const active = isActive(item.to);
             return (
               <Link
@@ -131,6 +136,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+      <ContentPolicy />
     </div>
   );
+
 }
