@@ -111,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-xl md:hidden">
         <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2">
-          {navItems.map((item) => {
+          {navItems.filter(i => ["/feed","/search","/messages","/notifications","/profile"].includes(i.to)).map((item) => {
             const active = isActive(item.to);
             return (
               <Link
@@ -136,6 +136,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+      <ContentPolicy />
     </div>
   );
+
 }
