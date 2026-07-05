@@ -5,10 +5,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Wallet, Link as LinkIcon, Edit3, Check, X, Copy, Camera, ImageIcon, Loader2,
+  Twitter, Instagram, Send as SendIcon, MessageSquare, Flag,
 } from "lucide-react";
 import { Avatar } from "./feed";
 import { formatDistanceToNow } from "date-fns";
 import { uploadMedia, signed } from "@/lib/media-upload";
+import { connectInjectedWallet, hasInjectedWallet } from "@/lib/wallet";
+import { UpgradeToProButton } from "@/components/paystack-button";
+import { FoundingBadge, VerifiedBadge } from "@/components/pro-badge";
+import { ReportModal } from "@/components/report-modal";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -35,16 +40,15 @@ type Profile = {
   profession_other: string | null;
   linkshine_url: string | null;
   linkshine_public: boolean;
+  x_handle: string | null;
+  instagram_handle: string | null;
+  telegram_handle: string | null;
+  discord_handle: string | null;
+  founding_member_number: number | null;
+  is_pro: boolean;
+  is_verified: boolean;
+  pro_until: string | null;
 };
-
-function mockConnectWallet(): string {
-  const chars = "0123456789abcdef";
-  let addr = "0x";
-  const arr = new Uint8Array(40);
-  crypto.getRandomValues(arr);
-  for (let i = 0; i < 40; i++) addr += chars[arr[i] % 16];
-  return addr;
-}
 
 function ProfilePage() {
   const queryClient = useQueryClient();
@@ -52,6 +56,7 @@ function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Profile>>({});
   const [tab, setTab] = useState<"posts" | "bookmarks">("posts");
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null)); }, []);
 
@@ -61,7 +66,7 @@ function ProfilePage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("*").eq("id", me!).single();
       if (error) throw error;
-      return data as Profile;
+      return data as unknown as Profile;
     },
   });
 
@@ -104,7 +109,7 @@ function ProfilePage() {
         .from("bookmarks")
         .select("post:posts(id,content,created_at,likes_count,comments_count,author:profiles!posts_author_id_fkey(username,full_name))")
         .order("created_at", { ascending: false });
-      return (data ?? []).map((r: any) => r.post).filter(Boolean);
+      return (data ?? []).map((r) => r.post).filter(Boolean);
     },
   });
 
@@ -115,10 +120,14 @@ function ProfilePage() {
     const { error } = await supabase.from("profiles").update({
       full_name: form.full_name,
       bio: form.bio,
-      profession: form.profession as any,
+      profession: form.profession as never,
       profession_other: form.profession_other,
       linkshine_url: form.linkshine_url,
       linkshine_public: form.linkshine_public,
+      x_handle: form.x_handle,
+      instagram_handle: form.instagram_handle,
+      telegram_handle: form.telegram_handle,
+      discord_handle: form.discord_handle,
     }).eq("id", me);
     if (error) { toast.error(error.message); return; }
     toast.success("Profile updated");
@@ -128,10 +137,14 @@ function ProfilePage() {
 
   async function connectWallet() {
     if (!me) return;
-    const addr = mockConnectWallet();
-    await supabase.from("profiles").update({ wallet_address: addr }).eq("id", me);
-    queryClient.invalidateQueries({ queryKey: ["profile", me] });
-    toast.success("Wallet linked");
+    try {
+      const addr = await connectInjectedWallet();
+      await supabase.from("profiles").update({ wallet_address: addr }).eq("id", me);
+      queryClient.invalidateQueries({ queryKey: ["profile", me] });
+      toast.success("Wallet linked");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Wallet connect failed");
+    }
   }
 
   async function uploadProfileImage(kind: "avatar" | "banner", file: File | undefined) {
@@ -144,8 +157,14 @@ function ProfilePage() {
       await supabase.from("profiles").update(patch).eq("id", me);
       queryClient.invalidateQueries({ queryKey: ["profile", me] });
       toast.success(`${kind === "avatar" ? "Photo" : "Banner"} updated`);
-    } catch (e: any) { toast.error(e.message ?? "Upload failed"); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Upload failed"); }
+  }
 
+  function copyLinkshine() {
+    if (!profile?.linkshine_url) return;
+    const full = profile.linkshine_url.startsWith("http") ? profile.linkshine_url : `https://${profile.linkshine_url}`;
+    navigator.clipboard.writeText(full);
+    toast.success("Linkshine copied");
   }
 
   if (!profile) {
@@ -156,7 +175,6 @@ function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      {/* Banner */}
       <div className="relative h-44 overflow-hidden md:rounded-b-2xl">
         {profile.banner_url ? (
           <img src={profile.banner_url} alt="" className="h-full w-full object-cover" />
@@ -167,7 +185,6 @@ function ProfilePage() {
       </div>
 
       <div className="px-4">
-        {/* Header card */}
         <div className="-mt-12 flex items-end justify-between">
           <div className="relative">
             <div className="rounded-full border-4 border-background">
@@ -176,15 +193,17 @@ function ProfilePage() {
             <AvatarUpload onPick={(f) => uploadProfileImage("avatar", f)} />
           </div>
           {!editing ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-secondary"
-            >
-              <span className="inline-flex items-center gap-1.5"><Edit3 className="h-3 w-3" /> Edit profile</span>
-            </button>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold hover:bg-secondary"
+              >
+                <span className="inline-flex items-center gap-1.5"><Edit3 className="h-3 w-3" /> Edit profile</span>
+              </button>
+            </div>
           ) : (
             <div className="flex gap-1">
-              <button onClick={save} className="flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
+              <button onClick={save} className="flex items-center gap-1 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background">
                 <Check className="h-3 w-3" /> Save
               </button>
               <button onClick={() => { setEditing(false); setForm(profile); }} className="rounded-full border border-border bg-card p-2">
@@ -194,75 +213,93 @@ function ProfilePage() {
           )}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 space-y-2">
           {editing ? (
             <input
               value={form.full_name ?? ""}
               onChange={(e) => setForm({ ...form, full_name: e.target.value })}
               placeholder="Display name"
-              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-base font-semibold outline-none focus:border-primary"
+              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-base font-semibold outline-none focus:border-foreground"
             />
           ) : (
-            <h1 className="font-display text-2xl font-bold tracking-tight">{profile.full_name || profile.username}</h1>
+            <h1 className="flex items-center gap-1.5 font-display text-2xl font-bold tracking-tight">
+              {profile.full_name || profile.username}
+              {profile.is_verified && <VerifiedBadge className="h-5 w-5" />}
+            </h1>
           )}
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
 
-          {/* Profession chip */}
-          <div className="mt-2">
-            {editing ? (
-              <div className="space-y-2">
-                <select
-                  value={form.profession ?? "other"}
-                  onChange={(e) => setForm({ ...form, profession: e.target.value })}
-                  className="rounded-full border border-border bg-input px-3 py-1.5 text-xs outline-none"
-                >
-                  {PROFESSIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-                </select>
-                {form.profession === "other" && (
-                  <input
-                    value={form.profession_other ?? ""}
-                    onChange={(e) => setForm({ ...form, profession_other: e.target.value })}
-                    placeholder="Your profession"
-                    className="w-full rounded-lg border border-border bg-input px-3 py-1.5 text-xs outline-none"
-                  />
-                )}
-              </div>
-            ) : (
-              <span className="inline-block rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {profile.profession === "other" ? (profile.profession_other || "Member") : professionLabel}
-              </span>
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-2">
+            {profile.founding_member_number && (
+              <FoundingBadge number={profile.founding_member_number} />
             )}
+            {profile.is_pro && !profile.founding_member_number && (
+              <span className="rounded-full border border-foreground bg-foreground px-3 py-1 text-xs font-bold uppercase tracking-wider text-background">Pro</span>
+            )}
+            <span className="rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {profile.profession === "other" ? (profile.profession_other || "Member") : professionLabel}
+            </span>
           </div>
 
-          {/* Bio */}
+          {editing && (
+            <div className="space-y-2">
+              <select
+                value={form.profession ?? "other"}
+                onChange={(e) => setForm({ ...form, profession: e.target.value })}
+                className="rounded-full border border-border bg-input px-3 py-1.5 text-xs outline-none"
+              >
+                {PROFESSIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+              </select>
+              {form.profession === "other" && (
+                <input
+                  value={form.profession_other ?? ""}
+                  onChange={(e) => setForm({ ...form, profession_other: e.target.value })}
+                  placeholder="Your profession"
+                  className="w-full rounded-lg border border-border bg-input px-3 py-1.5 text-xs outline-none"
+                />
+              )}
+            </div>
+          )}
+
           {editing ? (
             <textarea
               value={form.bio ?? ""}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
-              placeholder="Bio"
-              rows={3}
-              maxLength={280}
-              className="mt-3 w-full resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary"
+              placeholder="Bio" rows={3} maxLength={280}
+              className="w-full resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-foreground"
             />
           ) : (
-            profile.bio && <p className="mt-3 text-[15px] leading-relaxed text-foreground/90">{profile.bio}</p>
+            profile.bio && <p className="text-[15px] leading-relaxed text-foreground/90">{profile.bio}</p>
           )}
 
-          {/* Counts */}
-          <div className="mt-4 flex gap-6 text-sm">
+          <div className="flex gap-6 pt-1 text-sm">
             <Stat label="Posts" value={counts?.posts ?? 0} />
             <Stat label="Followers" value={counts?.followers ?? 0} />
             <Stat label="Following" value={counts?.following ?? 0} />
           </div>
 
+          {/* Upgrade CTA for non-pro users */}
+          {!profile.is_pro && (
+            <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-foreground/20 bg-foreground/5 p-3">
+              <div>
+                <div className="text-sm font-semibold">Unlock Pro</div>
+                <div className="text-xs text-muted-foreground">Verified checkmark, calls, themes · $5/mo</div>
+              </div>
+              <UpgradeToProButton onSuccess={() => queryClient.invalidateQueries({ queryKey: ["profile", me] })} label="Upgrade" />
+            </div>
+          )}
+
           {/* Wallet */}
-          <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-3">
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-3">
             <div className="flex min-w-0 items-center gap-2">
               <Wallet className="h-4 w-4 text-muted-foreground" />
               {profile.wallet_address ? (
                 <code className="truncate font-mono text-xs text-foreground/90">{profile.wallet_address}</code>
               ) : (
-                <span className="text-xs text-muted-foreground">No wallet connected</span>
+                <span className="text-xs text-muted-foreground">
+                  {hasInjectedWallet() ? "No wallet connected" : "Install MetaMask to connect"}
+                </span>
               )}
             </div>
             {profile.wallet_address ? (
@@ -273,7 +310,7 @@ function ProfilePage() {
                 <Copy className="h-3.5 w-3.5" />
               </button>
             ) : (
-              <button onClick={connectWallet} className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+              <button onClick={connectWallet} className="rounded-full bg-foreground px-3 py-1 text-xs font-semibold text-background">
                 Connect
               </button>
             )}
@@ -281,28 +318,47 @@ function ProfilePage() {
 
           {/* Linkshine */}
           {editing ? (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-input px-3 py-2">
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-input px-3 py-2">
               <LinkIcon className="h-4 w-4 text-muted-foreground" />
               <input
                 value={form.linkshine_url ?? ""}
                 onChange={(e) => setForm({ ...form, linkshine_url: e.target.value })}
-                placeholder="Linkshine URL"
+                placeholder="Your Linkshine URL"
                 className="flex-1 bg-transparent text-sm outline-none"
               />
               <label className="flex items-center gap-1 text-xs text-muted-foreground">
                 <input type="checkbox" checked={form.linkshine_public ?? true} onChange={(e) => setForm({ ...form, linkshine_public: e.target.checked })} /> public
               </label>
             </div>
+          ) : profile.linkshine_url && (
+            <button
+              onClick={copyLinkshine}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-foreground/90 hover:bg-secondary/70"
+              title={profile.linkshine_public ? "Public DM link" : "Private DM link (only you)"}
+            >
+              <LinkIcon className="h-3 w-3" /> {profile.linkshine_url}
+              {!profile.linkshine_public && <span className="ml-1 text-muted-foreground">(private)</span>}
+            </button>
+          )}
+
+          {/* Social links */}
+          {editing ? (
+            <div className="grid grid-cols-2 gap-2">
+              <SocialInput icon={Twitter} placeholder="X / Twitter" value={form.x_handle ?? ""} onChange={(v) => setForm({ ...form, x_handle: v })} />
+              <SocialInput icon={Instagram} placeholder="Instagram" value={form.instagram_handle ?? ""} onChange={(v) => setForm({ ...form, instagram_handle: v })} />
+              <SocialInput icon={SendIcon} placeholder="Telegram" value={form.telegram_handle ?? ""} onChange={(v) => setForm({ ...form, telegram_handle: v })} />
+              <SocialInput icon={MessageSquare} placeholder="Discord" value={form.discord_handle ?? ""} onChange={(v) => setForm({ ...form, discord_handle: v })} />
+            </div>
           ) : (
-            profile.linkshine_url && profile.linkshine_public && (
-              <a href={profile.linkshine_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs text-foreground/90 hover:bg-secondary/70">
-                <LinkIcon className="h-3 w-3" /> {profile.linkshine_url.replace(/^https?:\/\//, "")}
-              </a>
-            )
+            <div className="flex flex-wrap gap-1.5">
+              {profile.x_handle && <SocialChip icon={Twitter} href={`https://x.com/${profile.x_handle.replace(/^@/, "")}`} label={`@${profile.x_handle.replace(/^@/, "")}`} />}
+              {profile.instagram_handle && <SocialChip icon={Instagram} href={`https://instagram.com/${profile.instagram_handle.replace(/^@/, "")}`} label={`@${profile.instagram_handle.replace(/^@/, "")}`} />}
+              {profile.telegram_handle && <SocialChip icon={SendIcon} href={`https://t.me/${profile.telegram_handle.replace(/^@/, "")}`} label={`@${profile.telegram_handle.replace(/^@/, "")}`} />}
+              {profile.discord_handle && <SocialChip icon={MessageSquare} href="#" label={profile.discord_handle} />}
+            </div>
           )}
         </div>
 
-        {/* Tabs */}
         <div className="mt-6 flex border-b border-border">
           {(["posts", "bookmarks"] as const).map((t) => (
             <button
@@ -318,21 +374,24 @@ function ProfilePage() {
         </div>
 
         <div className="space-y-3 py-4 pb-10">
-          {(tab === "posts" ? posts : bookmarks)?.map((p: any) => (
-            <div key={p.id} className="rounded-2xl border border-border bg-card p-4">
-              {p.author && (
-                <div className="mb-1 text-xs text-muted-foreground">
-                  @{p.author.username} {p.author.full_name ? `· ${p.author.full_name}` : ""}
+          {(tab === "posts" ? posts : bookmarks)?.map((p) => {
+            const post = p as { id: string; content: string | null; created_at: string; likes_count: number; comments_count: number; author?: { username: string; full_name: string | null } };
+            return (
+              <div key={post.id} className="rounded-2xl border border-border bg-card p-4">
+                {post.author && (
+                  <div className="mb-1 text-xs text-muted-foreground">
+                    @{post.author.username}{post.author.full_name ? ` · ${post.author.full_name}` : ""}
+                  </div>
+                )}
+                {post.content && <p className="whitespace-pre-wrap text-sm">{post.content}</p>}
+                <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
+                  <span>· {post.likes_count} likes</span>
+                  <span>· {post.comments_count ?? 0} comments</span>
                 </div>
-              )}
-              {p.content && <p className="whitespace-pre-wrap text-sm">{p.content}</p>}
-              <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{formatDistanceToNow(new Date(p.created_at), { addSuffix: true })}</span>
-                <span>· {p.likes_count} likes</span>
-                <span>· {p.comments_count ?? 0} comments</span>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {tab === "posts" && posts && posts.length === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">No posts yet.</p>
           )}
@@ -340,7 +399,20 @@ function ProfilePage() {
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">No bookmarks yet.</p>
           )}
         </div>
+
+        <div className="pb-24">
+          <button
+            onClick={() => setReportOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Flag className="h-3 w-3" /> Report a problem with this profile
+          </button>
+        </div>
       </div>
+
+      {reportOpen && me && (
+        <ReportModal targetType="profile" targetId={me} onClose={() => setReportOpen(false)} />
+      )}
     </div>
   );
 }
@@ -351,6 +423,33 @@ function Stat({ label, value }: { label: string; value: number }) {
       <div className="text-base font-bold text-foreground">{value}</div>
       <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
+  );
+}
+
+function SocialInput({ icon: Icon, placeholder, value, onChange }: { icon: React.ComponentType<{ className?: string }>; placeholder: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-border bg-input px-3 py-2">
+      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 bg-transparent text-xs outline-none"
+      />
+    </div>
+  );
+}
+
+function SocialChip({ icon: Icon, href, label }: { icon: React.ComponentType<{ className?: string }>; href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-[11px] hover:bg-secondary/70"
+    >
+      <Icon className="h-3 w-3" /> {label}
+    </a>
   );
 }
 
@@ -385,7 +484,7 @@ function AvatarUpload({ onPick }: { onPick: (f: File | undefined) => void }) {
       }} />
       <button
         onClick={() => ref.current?.click()}
-        className="absolute -right-1 -bottom-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground hover:opacity-90"
+        className="absolute -right-1 -bottom-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-foreground text-background hover:opacity-90"
       >
         {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
       </button>
