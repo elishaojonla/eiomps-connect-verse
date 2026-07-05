@@ -17,7 +17,7 @@ type ConvoRow = {
   user_b: string;
   last_message_at: string;
   other: { id: string; username: string; full_name: string | null; avatar_url: string | null } | null;
-  last: { content: string; created_at: string } | null;
+  last: { content: string | null; created_at: string; media_type?: string | null } | null;
 };
 
 function MessagesIndex() {
@@ -47,7 +47,7 @@ function MessagesIndex() {
             .maybeSingle();
           const { data: last } = await supabase
             .from("messages")
-            .select("content,created_at")
+            .select("content,created_at,media_type")
             .eq("conversation_id", c.id)
             .order("created_at", { ascending: false })
             .limit(1)
