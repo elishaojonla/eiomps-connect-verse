@@ -99,7 +99,7 @@ function MessagesIndex() {
                   </span>
                 </div>
                 <p className="truncate text-sm text-muted-foreground">
-                  {c.last?.content ?? "No messages yet"}
+                  {c.last?.media_type === "audio" ? "🎤 Voice note" : c.last?.content ?? "No messages yet"}
                 </p>
               </div>
             </Link>
