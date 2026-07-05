@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookmarks: {
         Row: {
           created_at: string
@@ -167,6 +200,21 @@ export type Database = {
           },
         ]
       }
+      founding_member_counter: {
+        Row: {
+          count: number
+          id: boolean
+        }
+        Insert: {
+          count?: number
+          id?: boolean
+        }
+        Update: {
+          count?: number
+          id?: boolean
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -200,27 +248,68 @@ export type Database = {
           },
         ]
       }
+      login_activity: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_activity_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
-          content: string
+          content: string | null
           conversation_id: string
           created_at: string
           id: string
+          media_type: string | null
+          media_url: string | null
           sender_id: string
+          transcript: string | null
         }
         Insert: {
-          content: string
+          content?: string | null
           conversation_id: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           sender_id: string
+          transcript?: string | null
         }
         Update: {
-          content?: string
+          content?: string | null
           conversation_id?: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           sender_id?: string
+          transcript?: string | null
         }
         Relationships: [
           {
@@ -338,19 +427,68 @@ export type Database = {
           },
         ]
       }
+      pro_subscriptions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          ends_at: string | null
+          id: string
+          reference: string
+          starts_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          reference: string
+          starts_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          reference?: string
+          starts_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           banner_url: string | null
           bio: string | null
           created_at: string
+          discord_handle: string | null
+          dm_privacy: string
+          founding_member_number: number | null
           full_name: string | null
           id: string
           instagram_handle: string | null
+          is_pro: boolean
+          is_verified: boolean
           linkshine_public: boolean
           linkshine_url: string | null
+          posts_privacy: string
+          pro_until: string | null
           profession: Database["public"]["Enums"]["profession"] | null
           profession_other: string | null
+          telegram_handle: string | null
           theme_color: string | null
           updated_at: string
           username: string
@@ -362,13 +500,21 @@ export type Database = {
           banner_url?: string | null
           bio?: string | null
           created_at?: string
+          discord_handle?: string | null
+          dm_privacy?: string
+          founding_member_number?: number | null
           full_name?: string | null
           id: string
           instagram_handle?: string | null
+          is_pro?: boolean
+          is_verified?: boolean
           linkshine_public?: boolean
           linkshine_url?: string | null
+          posts_privacy?: string
+          pro_until?: string | null
           profession?: Database["public"]["Enums"]["profession"] | null
           profession_other?: string | null
+          telegram_handle?: string | null
           theme_color?: string | null
           updated_at?: string
           username: string
@@ -380,13 +526,21 @@ export type Database = {
           banner_url?: string | null
           bio?: string | null
           created_at?: string
+          discord_handle?: string | null
+          dm_privacy?: string
+          founding_member_number?: number | null
           full_name?: string | null
           id?: string
           instagram_handle?: string | null
+          is_pro?: boolean
+          is_verified?: boolean
           linkshine_public?: boolean
           linkshine_url?: string | null
+          posts_privacy?: string
+          pro_until?: string | null
           profession?: Database["public"]["Enums"]["profession"] | null
           profession_other?: string | null
+          telegram_handle?: string | null
           theme_color?: string | null
           updated_at?: string
           username?: string
@@ -394,6 +548,47 @@ export type Database = {
           x_handle?: string | null
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

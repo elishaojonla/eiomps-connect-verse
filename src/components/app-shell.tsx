@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ContentPolicy } from "@/components/content-policy";
+import { Tutorial } from "@/components/tutorial";
+
 
 const navItems = [
   { to: "/feed", label: "Home", icon: Home },
@@ -137,6 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </nav>
       <ContentPolicy />
+      <Tutorial />
     </div>
   );
 
