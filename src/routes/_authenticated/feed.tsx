@@ -132,6 +132,9 @@ function FeedPage() {
 
       <Composer onPosted={() => queryClient.invalidateQueries({ queryKey: ["posts"] })} me={me} />
 
+      <CryptoWidget />
+
+
       {isLoading ? (
         <div className="mt-5 space-y-3">
           {[1, 2, 3].map((i) => (
