@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { Crown, Loader2 } from "lucide-react";
 
 const PAYSTACK_PUBLIC_KEY = "pk_test_c229a24ac406f19c2ee98f864a934d04fa7fc8ca";
-const AMOUNT_CENTS = 500; // $5 → Paystack uses subunit; USD 500 = $5.00
+const AMOUNT_KOBO = 750000; // ₦7,500 → Paystack uses kobo (₦1 = 100 kobo)
+const CURRENCY = "NGN";
 
 type PaystackPop = {
   setup: (opts: {
@@ -39,7 +40,7 @@ function loadPaystack(): Promise<PaystackPop> {
 
 export function UpgradeToProButton({
   className = "",
-  label = "Upgrade to Pro — $5/mo",
+  label = "Upgrade to Pro — ₦7,500/mo",
   onSuccess,
 }: { className?: string; label?: string; onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -60,8 +61,8 @@ export function UpgradeToProButton({
         const handler = Paystack.setup({
           key: PAYSTACK_PUBLIC_KEY,
           email,
-          amount: AMOUNT_CENTS,
-          currency: "USD",
+          amount: AMOUNT_KOBO,
+          currency: CURRENCY,
           ref,
           callback: async (r) => {
             try {

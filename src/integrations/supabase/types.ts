@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      airdrops: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          project: string
+          reward: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          project: string
+          reward?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          project?: string
+          reward?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "airdrops_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_settings: {
+        Row: {
+          id: boolean
+          official_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          official_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          official_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_official_user_id_fkey"
+            columns: ["official_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocks: {
         Row: {
           blocked_id: string
@@ -388,6 +461,8 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
+          is_official: boolean
+          is_pinned: boolean
           likes_count: number
           media_type: string | null
           media_url: string | null
@@ -400,6 +475,8 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_official?: boolean
+          is_pinned?: boolean
           likes_count?: number
           media_type?: string | null
           media_url?: string | null
@@ -412,6 +489,8 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_official?: boolean
+          is_pinned?: boolean
           likes_count?: number
           media_type?: string | null
           media_url?: string | null
@@ -471,6 +550,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          ban_reason: string | null
           banner_url: string | null
           bio: string | null
           created_at: string
@@ -480,6 +560,9 @@ export type Database = {
           full_name: string | null
           id: string
           instagram_handle: string | null
+          interests: string[]
+          is_banned: boolean
+          is_official: boolean
           is_pro: boolean
           is_verified: boolean
           linkshine_public: boolean
@@ -488,6 +571,7 @@ export type Database = {
           pro_until: string | null
           profession: Database["public"]["Enums"]["profession"] | null
           profession_other: string | null
+          reputation_score: number
           telegram_handle: string | null
           theme_color: string | null
           updated_at: string
@@ -497,6 +581,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          ban_reason?: string | null
           banner_url?: string | null
           bio?: string | null
           created_at?: string
@@ -506,6 +591,9 @@ export type Database = {
           full_name?: string | null
           id: string
           instagram_handle?: string | null
+          interests?: string[]
+          is_banned?: boolean
+          is_official?: boolean
           is_pro?: boolean
           is_verified?: boolean
           linkshine_public?: boolean
@@ -514,6 +602,7 @@ export type Database = {
           pro_until?: string | null
           profession?: Database["public"]["Enums"]["profession"] | null
           profession_other?: string | null
+          reputation_score?: number
           telegram_handle?: string | null
           theme_color?: string | null
           updated_at?: string
@@ -523,6 +612,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          ban_reason?: string | null
           banner_url?: string | null
           bio?: string | null
           created_at?: string
@@ -532,6 +622,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           instagram_handle?: string | null
+          interests?: string[]
+          is_banned?: boolean
+          is_official?: boolean
           is_pro?: boolean
           is_verified?: boolean
           linkshine_public?: boolean
@@ -540,6 +633,7 @@ export type Database = {
           pro_until?: string | null
           profession?: Database["public"]["Enums"]["profession"] | null
           profession_other?: string | null
+          reputation_score?: number
           telegram_handle?: string | null
           theme_color?: string | null
           updated_at?: string
@@ -590,14 +684,113 @@ export type Database = {
           },
         ]
       }
+      spaces: {
+        Row: {
+          created_at: string
+          description: string | null
+          host_id: string
+          id: string
+          scheduled_for: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          host_id: string
+          id?: string
+          scheduled_for?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          host_id?: string
+          id?: string
+          scheduled_for?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spaces_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggested_accounts: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggested_accounts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      recompute_reputation: { Args: { _user_id: string }; Returns: undefined }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       notification_type: "like" | "message" | "follow" | "mention"
       profession:
         | "web3_designer"
@@ -733,6 +926,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       notification_type: ["like", "message", "follow", "mention"],
       profession: [
         "web3_designer",
