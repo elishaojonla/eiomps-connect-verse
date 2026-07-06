@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, MessageCircle, Bell, User, LogOut, Search, Flame, Settings } from "lucide-react";
+import { Home, MessageCircle, Bell, User, LogOut, Search, Flame, Settings, Gift, Mic, Shield } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -9,10 +9,12 @@ import { ContentPolicy } from "@/components/content-policy";
 import { Tutorial } from "@/components/tutorial";
 
 
-const navItems = [
+const baseNav = [
   { to: "/feed", label: "Home", icon: Home },
   { to: "/search", label: "Search", icon: Search },
   { to: "/trending", label: "Trending", icon: Flame },
+  { to: "/airdrops", label: "Airdrops", icon: Gift },
+  { to: "/spaces", label: "Spaces", icon: Mic },
   { to: "/messages", label: "Messages", icon: MessageCircle },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/profile", label: "Profile", icon: User },
