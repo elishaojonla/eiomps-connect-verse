@@ -60,8 +60,9 @@ function FeedPage() {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id,content,created_at,likes_count,comments_count,bookmarks_count,media_url,media_type,transcript,author:profiles!posts_author_id_fkey(id,username,full_name,avatar_url)",
+          "id,content,created_at,likes_count,comments_count,bookmarks_count,media_url,media_type,transcript,is_pinned,is_official,author:profiles!posts_author_id_fkey(id,username,full_name,avatar_url,is_verified,is_official)",
         )
+        .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
