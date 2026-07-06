@@ -604,3 +604,76 @@ function CommentsDrawer({ postId, me, onClose }: { postId: string; me: string; o
     </div>
   );
 }
+
+/* -------------------- Crypto news + prices widget -------------------- */
+import { getCryptoNews, getTopCoins } from "@/lib/news.functions";
+import { ExternalLink, TrendingUp } from "lucide-react";
+
+function CryptoWidget() {
+  const news = useServerFn(getCryptoNews);
+  const coins = useServerFn(getTopCoins);
+  const { data: newsData } = useQuery({
+    queryKey: ["crypto-news"],
+    queryFn: () => news({}),
+    staleTime: 5 * 60_000,
+  });
+  const { data: coinsData } = useQuery({
+    queryKey: ["top-coins"],
+    queryFn: () => coins({}),
+    staleTime: 2 * 60_000,
+  });
+
+  const items = newsData?.items ?? [];
+  const list = coinsData?.coins ?? [];
+
+  if (items.length === 0 && list.length === 0) return null;
+
+  return (
+    <div className="mt-5 space-y-3">
+      {list.length > 0 && (
+        <div className="overflow-x-auto rounded-2xl border border-border bg-card p-3">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <TrendingUp className="h-3 w-3" /> Live prices
+          </div>
+          <div className="flex gap-3">
+            {list.map((c) => (
+              <div key={c.id} className="flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2">
+                <img src={c.image} alt="" className="h-5 w-5 rounded-full" />
+                <div>
+                  <div className="text-xs font-semibold uppercase">{c.symbol}</div>
+                  <div className="text-xs">${c.current_price.toLocaleString(undefined, { maximumFractionDigits: 4 })}</div>
+                </div>
+                <span className={`text-[10px] font-semibold ${c.price_change_percentage_24h >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                  {c.price_change_percentage_24h >= 0 ? "+" : ""}{c.price_change_percentage_24h?.toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Web3 News</div>
+          <div className="space-y-2">
+            {items.slice(0, 5).map((n) => (
+              <a
+                key={n.id}
+                href={n.url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-start justify-between gap-2 rounded-lg p-2 hover:bg-secondary"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-sm">{n.title}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{n.source}</p>
+                </div>
+                <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
