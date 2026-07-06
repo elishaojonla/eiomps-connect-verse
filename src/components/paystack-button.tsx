@@ -61,8 +61,8 @@ export function UpgradeToProButton({
         const handler = Paystack.setup({
           key: PAYSTACK_PUBLIC_KEY,
           email,
-          amount: AMOUNT_CENTS,
-          currency: "USD",
+          amount: AMOUNT_KOBO,
+          currency: CURRENCY,
           ref,
           callback: async (r) => {
             try {
