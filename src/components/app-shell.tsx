@@ -27,6 +27,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [unread, setUnread] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: r } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      setIsAdmin(!!r);
+    });
+  }, []);
+
+  const navItems: ReadonlyArray<{ to: string; label: string; icon: typeof Home }> = isAdmin
+    ? [...baseNav, { to: "/admin", label: "Admin", icon: Shield }]
+    : baseNav;
 
   useEffect(() => {
     let active = true;
