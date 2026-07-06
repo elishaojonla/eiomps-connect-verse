@@ -40,7 +40,7 @@ function loadPaystack(): Promise<PaystackPop> {
 
 export function UpgradeToProButton({
   className = "",
-  label = "Upgrade to Pro — $5/mo",
+  label = "Upgrade to Pro — ₦7,500/mo",
   onSuccess,
 }: { className?: string; label?: string; onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false);
